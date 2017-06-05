@@ -21,28 +21,48 @@ public class BuildRadiatorAntListener implements BuildListener {
     Properties stepMap = new Properties();
     String buildRadiatorURL;
     boolean trace;
+    private BuildRadiatorInterop buildRadiatorInterop;
+    String buildId;
+    String buildingThisArtifact;
+    String radiatorCode;
+    String radiatorSecret;
+    private String rootProject;
 
     @Override
     public void buildStarted(BuildEvent buildEvent) {
-        prt(buildEvent, "buildStarted ");
+        // can't use this - buildEvent.getProject().getProperties() is empty
+
+        buildId = System.getenv("buildId");
+        buildingThisArtifact = System.getenv("buildingThisArtifact");
+        radiatorCode = System.getenv("radiatorCode");
+        radiatorSecret = System.getenv("radiatorSecret");
+
     }
 
     @Override
     public void buildFinished(BuildEvent buildEvent) {
-        prt(buildEvent, "buildFinished ");
+        buildFinished(buildEvent.getProject().getName());
+    }
 
+    void buildFinished(String projName) {
+        this.buildRadiatorInterop.projectEnd(projName);
     }
 
     @Override
     public void targetStarted(BuildEvent buildEvent) {
         if (steps.size() == 0) {
             determineSteps(buildEvent.getProject().getProperties());
+            rootProject = buildEvent.getProject().getName();
+            buildRadiatorInterop = makeBuildRadiatorInterop();
         }
-        prt(buildEvent, "targetStarted ");
-
+        targetStarted(buildEvent.getProject().getName(), buildEvent.getTarget().getName());
     }
 
-    private void determineSteps(Hashtable<String, Object> properties) {
+    void targetStarted(String projName, String targetName) {
+        this.buildRadiatorInterop.visitTarget(projName, targetName, "start");
+    }
+
+    void determineSteps(Hashtable<String, Object> properties) {
         buildRadiatorURL = (String) properties.get("buildradiator.baseurl");
         if (buildRadiatorURL == null) {
             buildRadiatorURL = "https://buildradiator.org";
@@ -60,41 +80,25 @@ public class BuildRadiatorAntListener implements BuildListener {
         }
     }
 
+    BuildRadiatorInterop makeBuildRadiatorInterop() {
+        return new BuildRadiatorInterop(buildId, buildingThisArtifact, radiatorCode, radiatorSecret, steps, stepMap, buildRadiatorURL, trace, rootProject);
+    }
+
     @Override
     public void targetFinished(BuildEvent buildEvent) {
-        prt(buildEvent, "targetFinished ");
+        targetFinished(buildEvent.getProject().getName(), buildEvent.getTarget().getName(), buildEvent.getException());
+    }
 
+    void targetFinished(String projName, String targetName, Throwable exception) {
+        if (exception != null) {
+            this.buildRadiatorInterop.visitTarget(projName, targetName, "failed");
+        } else {
+            this.buildRadiatorInterop.visitTarget(projName, targetName, "passed");
+        }
     }
 
     @Override
     public void taskStarted(BuildEvent buildEvent) {
-    }
-
-    private void prt(BuildEvent buildEvent, String typ) {
-//        buildEvent.getProject().log("HAM: " + typ + "/" + buildEvent.getProject().getName()
-//                + getTargetName(buildEvent)
-//                + getTaskName(buildEvent) + " : " + buildEvent.getProject().getProperty("version"));
-    }
-
-    private String getTargetName(BuildEvent buildEvent) {
-        try {
-            String name = buildEvent.getTarget().getName();
-            if (name.equals("")) {
-                return "";
-            } else {
-                return "/" + name;
-            }
-        } catch (NullPointerException e) {
-            return "";
-        }
-    }
-
-    private String getTaskName(BuildEvent buildEvent) {
-        try {
-            return "/" + buildEvent.getTask().getTaskName();
-        } catch (NullPointerException e) {
-            return "";
-        }
     }
 
     @Override
@@ -103,8 +107,6 @@ public class BuildRadiatorAntListener implements BuildListener {
 
     @Override
     public void messageLogged(BuildEvent buildEvent) {
-        //prt(buildEvent, "messageLogged ");
-
     }
 
 }
