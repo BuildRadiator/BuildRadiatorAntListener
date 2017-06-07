@@ -23,17 +23,18 @@ public class BuildRadiatorAntListener implements BuildListener {
     boolean trace;
     private BuildRadiatorInterop buildRadiatorInterop;
     String buildId;
-    String buildingThisArtifact;
+    String buildingThisProject;
     String radiatorCode;
     String radiatorSecret;
     private String rootProject;
 
     @Override
     public void buildStarted(BuildEvent buildEvent) {
-        // can't use this - buildEvent.getProject().getProperties() is empty
+
+        // can't fully use this - buildEvent.getProject().getProperties() is empty - have to extract properties in a targetStarted event
 
         buildId = System.getenv("buildId");
-        buildingThisArtifact = System.getenv("buildingThisArtifact");
+        buildingThisProject = System.getenv("buildingThisProject");
         radiatorCode = System.getenv("radiatorCode");
         radiatorSecret = System.getenv("radiatorSecret");
 
@@ -81,7 +82,7 @@ public class BuildRadiatorAntListener implements BuildListener {
     }
 
     BuildRadiatorInterop makeBuildRadiatorInterop() {
-        return new BuildRadiatorInterop(buildId, buildingThisArtifact, radiatorCode, radiatorSecret, steps, stepMap, buildRadiatorURL, trace, rootProject);
+        return new BuildRadiatorInterop(buildId, buildingThisProject, radiatorCode, radiatorSecret, steps, stepMap, buildRadiatorURL, trace, rootProject);
     }
 
     @Override

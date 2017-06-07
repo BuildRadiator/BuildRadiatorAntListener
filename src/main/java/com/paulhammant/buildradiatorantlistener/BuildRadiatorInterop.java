@@ -18,7 +18,7 @@ import java.util.Properties;
 public class BuildRadiatorInterop {
 
     private final String buildIdEnvVar;
-    private final String artifactEnvVar;
+    private final String buildingThisProject;
     private final String radiatorCodeEnvVar;
     private final String radiatorSecretEnvVar;
     private String rootProject;
@@ -31,11 +31,12 @@ public class BuildRadiatorInterop {
     private boolean env_var_warning = false;
     private boolean hasStarted = false;
     private boolean hasFailed = false;
+    private boolean failureNotified= false;
 
-    BuildRadiatorInterop(String buildIdEnvVar, String artifactEnvVar,
+    BuildRadiatorInterop(String buildIdEnvVar, String buildingThisProject,
                          String radiatorCodeEnvVar, String radiatorSecretEnvVar, List<String> steps, Properties stepMap, String buildRadiatorURL, boolean trace, String rootProject) {
         this.buildIdEnvVar = buildIdEnvVar;
-        this.artifactEnvVar = artifactEnvVar;
+        this.buildingThisProject = buildingThisProject;
         this.radiatorCodeEnvVar = radiatorCodeEnvVar;
         this.radiatorSecretEnvVar = radiatorSecretEnvVar;
         this.steps = steps;
@@ -71,6 +72,7 @@ public class BuildRadiatorInterop {
             if (status.equals("failed")) {
                 stepFailedNotification(lastStep);
                 hasFailed = true;
+                failureNotified = true;
             } else {
                 if (hasStarted) {
                     stepPassedAndStartStepNotification(lastStep, nextStep);
@@ -81,12 +83,17 @@ public class BuildRadiatorInterop {
                 hasStarted = true;
                 currStep++;
             }
+        } else if (status.equals("failed")) {
+            hasFailed = true;
+
         }
     }
 
     void projectEnd(String currentProjectId) {
         if (hasFailed) {
-            stepFailedNotification(lastStep);
+            if (!failureNotified) {
+                stepFailedNotification(lastStep);
+            }
         } else {
             stepPassedNotification(lastStep);
         }
@@ -109,13 +116,14 @@ public class BuildRadiatorInterop {
     }
 
     private void stepNotification(String pStep, String step, String stateChg) {
-        if (varsAreMissing() || !this.artifactEnvVar.equals(this.rootProject)) {
+
+        if (varsAreMissing() || !this.buildingThisProject.equals(this.rootProject)) {
             if (!env_var_warning) {
-                systemErr().println("BuildRadiatorEventSpy: 'artifactEnvVar', 'buildIdEnvVar', 'radiatorCodeEnvVar' and 'radiatorSecretEnvVar' all " +
+                systemErr().println("BuildRadiatorEventSpy: 'buildingThisProject', 'buildId', 'radiatorCode' and 'radiatorSecret' all " +
                         "have to be set as environmental variables before Maven is invoked, if you want " +
-                        "your radiator to be updated. Additionally, 'artifactEnvVar' needs to match the root " +
+                        "your radiator to be updated. Additionally, 'buildingThisProject' needs to match the root " +
                         "artifact being built. Note: This technology is for C.I. daemons only, not developer workstations!");
-                systemErr().println("  buildingThisArtifact (env var): " + artifactEnvVar);
+                systemErr().println("  buildingThisProject (env var): " + buildingThisProject);
                 systemErr().println("  buildId (env var): " + buildIdEnvVar);
                 systemErr().println("  radiatorCode (env var): " + radiatorCodeEnvVar);
                 if (radiatorSecretEnvVar == null) {
@@ -171,8 +179,8 @@ public class BuildRadiatorInterop {
     }
 
     private boolean varsAreMissing() {
-        return this.radiatorCodeEnvVar == null || this.artifactEnvVar == null || this.buildIdEnvVar == null || this.radiatorSecretEnvVar == null
-                || this.radiatorCodeEnvVar.equals("") || this.artifactEnvVar.equals("") || this.buildIdEnvVar.equals("") || this.radiatorSecretEnvVar.equals("");
+        return this.radiatorCodeEnvVar == null || this.buildingThisProject == null || this.buildIdEnvVar == null || this.radiatorSecretEnvVar == null
+                || this.radiatorCodeEnvVar.equals("") || this.buildingThisProject.equals("") || this.buildIdEnvVar.equals("") || this.radiatorSecretEnvVar.equals("");
     }
 
 }
