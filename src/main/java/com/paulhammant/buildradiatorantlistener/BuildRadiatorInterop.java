@@ -74,11 +74,7 @@ public class BuildRadiatorInterop {
                 hasFailed = true;
                 failureNotified = true;
             } else {
-                if (hasStarted) {
-                    stepPassedAndStartStepNotification(lastStep, nextStep);
-                } else {
-                    startStepNotification(nextStep);
-                }
+                startStepNotification(nextStep);
                 lastStep = nextStep;
                 hasStarted = true;
                 currStep++;
@@ -100,22 +96,18 @@ public class BuildRadiatorInterop {
     }
 
     private void stepPassedNotification(String step) {
-        stepNotification(null, step, "stepPassed");
-    }
-
-    private void stepPassedAndStartStepNotification(String pStep, String step) {
-        stepNotification(pStep, step, "stepPassedAndStartStep");
+        stepNotification(step, "stepPassed");
     }
 
     private void startStepNotification(String step) {
-        stepNotification(null, step, "startStep");
+        stepNotification(step, "startStep");
     }
 
     private void stepFailedNotification(String step) {
-        stepNotification(null, step, "stepFailed");
+        stepNotification(step, "stepFailed");
     }
 
-    private void stepNotification(String pStep, String step, String stateChg) {
+    private void stepNotification(String step, String stateChg) {
 
         if (varsAreMissing() || !this.buildingThisProject.equals(this.rootProject)) {
             if (!env_var_warning) {
@@ -137,9 +129,6 @@ public class BuildRadiatorInterop {
         }
         try {
             String urlParameters = "build=" + this.buildIdEnvVar + "&step=" + step + "&secret=" + this.radiatorSecretEnvVar;
-            if (pStep != null) {
-                urlParameters = urlParameters + "&pStep=" + pStep;
-            }
             String op = postUpdate(new URL(buildRadiatorURL + "/r/" + this.radiatorCodeEnvVar + "/" + stateChg), urlParameters);
             if (!op.equals("OK")) {
                 systemErr().println("POST to buildradiator.org failed with " + op);

@@ -62,7 +62,7 @@ Don't do these on your dev workstation, because updating the build radiator is t
 
 ## Researching where to make step changes
 
-In your project's build.xml:
+Before kicking off a build, put this in your project's build.xml, so that you can see all the places you may want to set steps:
 
 ```
 <property name="buildradiator.trace" value="true" />

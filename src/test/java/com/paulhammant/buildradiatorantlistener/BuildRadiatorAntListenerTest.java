@@ -109,8 +109,8 @@ public class BuildRadiatorAntListenerTest {
         verifyNoMoreInteractions(be, project, target);
 
         assertThat(posts.toString(), equalTo("http://foo/r/Rcode/startStep build=buildId&step=init&secret=Rsecret\n" +
-                "http://foo/r/Rcode/stepPassedAndStartStep build=buildId&step=compile&secret=Rsecret&pStep=init\n" +
-                "http://foo/r/Rcode/stepPassedAndStartStep build=buildId&step=package&secret=Rsecret&pStep=compile\n" +
+                "http://foo/r/Rcode/startStep build=buildId&step=compile&secret=Rsecret\n" +
+                "http://foo/r/Rcode/startStep build=buildId&step=package&secret=Rsecret\n" +
                 "http://foo/r/Rcode/stepPassed build=buildId&step=package&secret=Rsecret\n"));
 
     }
@@ -170,8 +170,8 @@ public class BuildRadiatorAntListenerTest {
         verifyNoMoreInteractions(be, project, target);
 
         assertThat(posts.toString(), equalTo("http://foo/r/Rcode/startStep build=buildId&step=init&secret=Rsecret\n" +
-                "http://foo/r/Rcode/stepPassedAndStartStep build=buildId&step=compile&secret=Rsecret&pStep=init\n" +
-                "http://foo/r/Rcode/stepPassedAndStartStep build=buildId&step=package&secret=Rsecret&pStep=compile\n" +
+                "http://foo/r/Rcode/startStep build=buildId&step=compile&secret=Rsecret\n" +
+                "http://foo/r/Rcode/startStep build=buildId&step=package&secret=Rsecret\n" +
                 "http://foo/r/Rcode/stepFailed build=buildId&step=package&secret=Rsecret\n"));
 
     }
@@ -225,7 +225,7 @@ public class BuildRadiatorAntListenerTest {
         verifyNoMoreInteractions(be, project, target);
 
         assertThat(posts.toString(), equalTo("http://foo/r/Rcode/startStep build=buildId&step=init&secret=Rsecret\n" +
-                "http://foo/r/Rcode/stepPassedAndStartStep build=buildId&step=compile&secret=Rsecret&pStep=init\n" +
+                "http://foo/r/Rcode/startStep build=buildId&step=compile&secret=Rsecret\n" +
                 "http://foo/r/Rcode/stepFailed build=buildId&step=compile&secret=Rsecret\n"));
 
     }
